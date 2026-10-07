@@ -57,13 +57,23 @@ jobs:
 
       - name: Build with CI build script (iOS only)
         run: |
-          export JAVA_HOME=$(/usr/libexec/java_home -v ${{ matrix.version }})
           echo "Using boot JAVA_HOME=$JAVA_HOME"
+          "$JAVA_HOME/bin/java" -version
           export BUILD_IOS=1
           unset J316SAP
           export TARGET_VERSION=${{ matrix.version }}
           export TARGET_JDK=aarch64
           bash "1_ci_build_arch_aarch64.sh"
+
+      - name: Upload patch rejects + configure log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "jre${{ matrix.version }}-ios-debug-logs"
+          path: |
+            openjdk-${{ matrix.version }}/**/*.rej
+            openjdk-${{ matrix.version }}/build/**/config.log
+            patches/jre_${{ matrix.version }}/ios/
 
       - name: Upload JRE build output
         uses: actions/upload-artifact@v4

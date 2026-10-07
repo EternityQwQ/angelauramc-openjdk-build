@@ -35,7 +35,7 @@ index 77ea7a693..4605e7979 100644
      if test x$DEBUG_LEVEL = xrelease; then
        BASIC_LDFLAGS_JDK_ONLY="$BASIC_LDFLAGS_JDK_ONLY -Wl,-dead_strip"
      fi
-     # FIXME: We should really generalize SET_SHARED_LIBRARY_ORIGIN instead.
+     # FIXME: We should really generalize SetSharedLibraryOrigin instead.
      OS_LDFLAGS_JVM_ONLY="-Wl,-rpath,@loader_path/. -Wl,-rpath,@loader_path/.."
 -    OS_LDFLAGS="-mmacosx-version-min=$MACOSX_VERSION_MIN -Wl,-reproducible"
 +    OS_LDFLAGS="-Wl,-reproducible"
@@ -337,9 +337,8 @@ diff --git a/make/modules/java.instrument/Lib.gmk b/make/modules/java.instrument
 index 609814c86..ec16bd806 100644
 --- a/make/modules/java.instrument/Lib.gmk
 +++ b/make/modules/java.instrument/Lib.gmk
-@@ -46,8 +46,7 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBINSTRUMENT, \
-     LIBS_linux := $(LIBDL), \
-     LIBS_aix := $(LIBDL), \
+@@ -46,7 +46,6 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBINSTRUMENT, \
+     LIBS_unix := $(LIBZ_LIBS), \
      LIBS_macosx := \
 -        -framework ApplicationServices \
 -        -framework Cocoa \
@@ -583,23 +582,26 @@ diff --git a/src/hotspot/os_cpu/bsd_aarch64/os_bsd_aarch64.cpp b/src/hotspot/os_
 index ae3526415..d5f69aac9 100644
 --- a/src/hotspot/os_cpu/bsd_aarch64/os_bsd_aarch64.cpp
 +++ b/src/hotspot/os_cpu/bsd_aarch64/os_bsd_aarch64.cpp
-@@ -53,6 +53,7 @@
+@@ -54,7 +54,8 @@
  #include "utilities/align.hpp"
+ #include "utilities/debug.hpp"
  #include "utilities/events.hpp"
  #include "utilities/vmError.hpp"
 +#include "tcg-apple-jit.h"
  
  // put OS-includes here
  # include <sys/types.h>
-@@ -498,7 +499,9 @@ int os::extra_bang_size_in_bytes() {
+@@ -518,9 +518,11 @@ int os::extra_bang_size_in_bytes() {
  }
  
+ #ifdef __APPLE__
  void os::current_thread_enable_wx(WXMode mode) {
 -  pthread_jit_write_protect_np(mode == WXExec);
 +  if (os::Bsd::isRWXJITAvailable()) {
 +    jit_write_protect(mode == WXExec);
 +  }
  }
+ #endif
  
  static inline void atomic_copy64(const volatile void *src, volatile void *dst) {
 diff --git a/src/hotspot/os_cpu/bsd_aarch64/tcg-apple-jit.h b/src/hotspot/os_cpu/bsd_aarch64/tcg-apple-jit.h

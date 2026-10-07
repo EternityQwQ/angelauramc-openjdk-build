@@ -67,8 +67,17 @@ else
   else
     ln -s -f /usr/local/include/fontconfig $ANDROID_INCLUDE/
   fi
+  # Prefer JAVA_HOME from CI (actions/setup-java) when set: /usr/libexec/java_home
+  # does not see hostedtoolcache JDKs and falls back to a wrong version (e.g. 25).
+  if [[ -n "$JAVA_HOME" && -x "$JAVA_HOME/bin/java" ]]; then
+    BOOT_JDK="$JAVA_HOME"
+  else
+    BOOT_JDK=$(/usr/libexec/java_home -v $TARGET_VERSION)
+  fi
+  echo "Using boot JDK: $BOOT_JDK"
+  "$BOOT_JDK/bin/java" -version
   platform_args="--with-toolchain-type=clang --with-sysroot=$(xcrun --sdk iphoneos --show-sdk-path) \
-    --with-boot-jdk=$(/usr/libexec/java_home -v $TARGET_VERSION) \
+    --with-boot-jdk=$BOOT_JDK \
     --with-freetype=bundled \
     "
   AUTOCONF_x11arg="--with-x=/opt/X11/include/X11 --prefix=/usr/lib"
