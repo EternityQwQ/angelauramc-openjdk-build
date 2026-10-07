@@ -17,7 +17,8 @@ jobs:
       fail-fast: false
 
     name: "Build Java ${{ matrix.version }} for iOS aarch64"
-    runs-on: J316sAP
+    # No self-hosted runner: use GitHub-hosted Apple Silicon macOS
+    runs-on: macos-14
     continue-on-error: true
     steps:
       - name: Checkout repository
@@ -25,21 +26,41 @@ jobs:
         with:
           ref: buildjre26
 
-      - name: Show Xcode / boot JDK (no local build allowed, all here)
+      - name: Show Xcode / SDKs
         run: |
           set -x
           xcodebuild -version || true
+          xcode-select -p || true
           xcrun --sdk iphoneos --show-sdk-path || true
-          /usr/libexec/java_home -V || true
-          export JAVA_HOME=$(/usr/libexec/java_home -v ${{ matrix.version }})
+          xcrun --sdk macosx --show-sdk-path || true
+
+      - name: Set up boot JDK ${{ matrix.version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.version }}
+          distribution: temurin
+
+      - name: Check boot JDK
+        run: |
+          set -x
           echo "JAVA_HOME=$JAVA_HOME"
           "$JAVA_HOME/bin/java" -version || true
+          /usr/libexec/java_home -V || true
+          /usr/libexec/java_home -v ${{ matrix.version }} || true
+
+      - name: Install build dependencies (GitHub runner, not J316sAP)
+        run: |
+          brew update || true
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf fontconfig ldid xquartz || true
+          ls /opt/X11/include/X11 || true
+          ls /opt/homebrew/include/fontconfig || true
 
       - name: Build with CI build script (iOS only)
         run: |
-          export PATH=/opt/procursus/bin:/opt/homebrew/bin:$PATH
           export JAVA_HOME=$(/usr/libexec/java_home -v ${{ matrix.version }})
-          export BUILD_IOS=1 J316SAP=1
+          echo "Using boot JAVA_HOME=$JAVA_HOME"
+          export BUILD_IOS=1
+          unset J316SAP
           export TARGET_VERSION=${{ matrix.version }}
           export TARGET_JDK=aarch64
           bash "1_ci_build_arch_aarch64.sh"
