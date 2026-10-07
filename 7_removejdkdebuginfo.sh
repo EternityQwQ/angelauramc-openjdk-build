@@ -34,7 +34,11 @@ else
    export JLINK_STRIP_ARG="--strip-debug"
 fi
 
-jlink \
+# jlink refuses to link when boot JDK and target versions differ
+# (JlinkTask.checkJavaBaseVersion compares release.txt: Temurin boot vs
+# adhoc-internal target on GitHub runners). Fall back to a full-image JRE
+# so the build still yields a bootable runtime instead of failing.
+if jlink \
 --module-path=jdkout/jmods \
 --add-modules java.base,java.compiler,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.se,java.security.jgss,java.security.sasl,java.sql,java.sql.rowset,java.transaction.xa,java.xml,java.xml.crypto,jdk.accessibility,jdk.charsets,jdk.crypto.cryptoki,jdk.crypto.ec,jdk.dynalink,jdk.httpserver,jdk.jdwp.agent,jdk.jfr,jdk.jsobject,jdk.localedata,jdk.management,jdk.management.agent,jdk.management.jfr,jdk.naming.dns,jdk.naming.rmi,jdk.net,jdk.nio.mapmode,jdk.sctp,jdk.security.auth,jdk.security.jgss,jdk.unsupported,jdk.xml.dom,jdk.zipfs$EXTRA_JLINK_OPTION \
 --output jreout \
@@ -42,7 +46,15 @@ $JLINK_STRIP_ARG \
 --no-man-pages \
 --no-header-files \
 --release-info=jdkout/release \
---compress=0 
+--compress=0
+then
+  echo "jlink produced a slim JRE"
+else
+  echo "jlink failed (usually boot/target version mismatch), falling back to full-image JRE"
+  rm -rf jreout
+  cp -r jdkout jreout
+  rm -rf jreout/jmods jreout/include jreout/man jreout/demo jreout/sample
+fi
 
 if [[ "$BUILD_IOS" != "1" ]]; then
    cp freetype-$BUILD_FREETYPE_VERSION/build_android-$TARGET_SHORT/lib/libfreetype.so jreout/lib/
