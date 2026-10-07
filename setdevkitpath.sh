@@ -1,10 +1,10 @@
 # Description: Set the environment variables for the build scripts.
 export NDK_VERSION=r27b
 
-# Target version is either 17 or 21
+# Target version is either 17, 21, 25 or 26 (buildjre26 defaults to 26, iOS only)
 if [[ -z "$TARGET_VERSION" ]]
 then
-  export TARGET_VERSION=21
+  export TARGET_VERSION=26
 fi
 
 

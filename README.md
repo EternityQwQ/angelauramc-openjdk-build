@@ -1,6 +1,10 @@
 # angelauramc-openjdk-build 
 
-**This branch is for OpenJDK 17 and 21.**
+**This branch is for OpenJDK 26 (iOS only, buildjre26).**
+
+Based on `duy/buildjre17-21-25-ios` (OpenJDK 17/21/25 iOS port). All porting/build work runs in GitHub Actions, no local build.
+
+JDK source: `git clone --depth 1 https://github.com/openjdk/jdk26u openjdk-26` (see `5_clonejdk.sh`). iOS patches baseline copied from `patches/jre_25/ios/` to `patches/jre_26/ios/` (`1_jdk26u_ios.diff`, `2_mirror_mapping.diff`) — adapt in Actions if `git apply` rejects.
 
 Based on [Java for Android](http://openjdk.java.net/projects/mobile/android.html) and [the PojavLauncher variant](https://github.com/PojavLauncherTeam/android-openjdk-build-multiarch)
 
@@ -15,7 +19,8 @@ Based on [Java for Android](http://openjdk.java.net/projects/mobile/android.html
 
 #### iOS
 - Install latest Xcode on your Mac.
-- If building JDK 17, install JDK 17. For 21, install JDK 21.
+- Install JDK 26 (`/usr/libexec/java_home -v 26` must work, used as `--with-boot-jdk` in `6_buildjdk.sh`).
+- iOS target: `TARGET=aarch64-apple-ios`, `BUILD_IOS=1`, `TARGET_VERSION=26`, runner `J316sAP` (see `.github/workflows/build.yml`). No local build — push to this branch triggers Actions.
 
 ### Platform and architecture specific environment variables
 <table>

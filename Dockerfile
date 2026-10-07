@@ -33,9 +33,12 @@ RUN apt-get install -y \
     cmake \
     xz-utils
 
-# JDK 17
+# JDK 17 / 21 / 25 (boot JDK for 26 is 25)
 RUN apt-get install -y openjdk-17-jdk
 RUN apt-get install -y openjdk-21-jdk
+RUN apt-get install -y openjdk-25-jdk || true
+# NOTE: buildjre26 is iOS-only (J316sAP runner). Android/Docker is disabled.
+# Building JDK 26 requires boot JDK 25 (see actions/setup-java in build.yml).
 
 WORKDIR /home
 

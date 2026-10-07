@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-if [[ $TARGET_VERSION -eq 25 ]]; then
+if [[ $TARGET_VERSION -eq 26 ]]; then
+    git clone --depth 1 https://github.com/openjdk/jdk26u openjdk-26
+elif [[ $TARGET_VERSION -eq 25 ]]; then
     git clone --depth 1 https://github.com/openjdk/jdk25u openjdk-25
 elif [[ $TARGET_VERSION -eq 21 ]]; then
     if [[ $BUILD_IOS ]]; then
